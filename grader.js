@@ -92,7 +92,7 @@ if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
         .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
-		.option('-u, --url <url_path>', 'url to test', clone(assertFileExists), URL_DEFAULT)
+		.option('-u, --url <url_path>', 'url to test', clone(assertUrlExists), URL_DEFAULT)
         .parse(process.argv);
 
 	if(program.file.length > 0){
