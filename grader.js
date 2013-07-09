@@ -24,7 +24,10 @@ References:
 var fs = require('fs');
 var program = require('commander');
 var cheerio = require('cheerio');
+var rest = require('restler');
 var HTMLFILE_DEFAULT = "index.html";
+var URLFILE_DEFAULT = "test.html";
+var URL_DEFAULT = "http://mighty-woodland-3935.herokuapp.com/";
 var CHECKSFILE_DEFAULT = "checks.json";
 
 var assertFileExists = function(infile) {
@@ -34,6 +37,10 @@ var assertFileExists = function(infile) {
         process.exit(1); // http://nodejs.org/api/process.html#process_process_exit_code
     }
     return instr;
+};
+
+var assertUrlExists = function(inUrl) {
+    return '';
 };
 
 var cheerioHtmlFile = function(htmlfile) {
@@ -55,6 +62,26 @@ var checkHtmlFile = function(htmlfile, checksfile) {
     return out;
 };
 
+var buildfn = function(htmlFile) {
+    var urlReponse = function(result, response) {
+        if (result instanceof Error) {
+            console.error('Error: ' + util.format(response.message));
+        } else {
+            fs.writeFileSync(htmlFile, result);
+ 		var checkJson =  checkHtmlFile(htmlFile, checksfile);
+			var outJson = JSON.stringify(checkJson, null, 4);
+			console.log(outJson);
+        }
+    };
+    return urlReponse;
+};
+
+var checkUrl = function(url, checksfile) {
+    var response2file = buildfn(URLFILE_DEFAULT);
+    rest.get(url).on('complete', response2file);
+};
+
+
 var clone = function(fn) {
     // Workaround for commander.js issue.
     // http://stackoverflow.com/a/6772648
@@ -65,10 +92,16 @@ if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
         .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
+		.option('-u, --url <url_path>', 'url to test', clone(assertFileExists), URL_DEFAULT)
         .parse(process.argv);
-    var checkJson = checkHtmlFile(program.file, program.checks);
-    var outJson = JSON.stringify(checkJson, null, 4);
-    console.log(outJson);
+
+	if(program.file.length > 0){
+		var checkJson = checkHtmlFile(program.file, program.checks);
+		var outJson = JSON.stringify(checkJson, null, 4);
+		console.log(outJson);
+	 } else {
+		checkUrl(program.url, program.checks);
+	 }
 } else {
     exports.checkHtmlFile = checkHtmlFile;
 }
